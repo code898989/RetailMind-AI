@@ -2,17 +2,24 @@
 
 RetailMind AI is an enterprise-grade retail intelligence platform developed incrementally across 35 production milestones.
 
-## Phase 1 Milestone Assessment: Classical ML Churn Engine Progression
+## Phase 2: Deep Learning Progression & Model Benchmarking
 
-| Milestone | Model Architecture | Accuracy | Recall (Churn=1) | Precision (Churn=1) | ROC-AUC | Status |
+| Day / Milestone | Model Architecture | Accuracy | Recall (Churn=1) | Precision (Churn=1) | ROC-AUC | Status |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| **Day 1** | Baseline Logistic Regression (StdScaler + OHE) | 0.8053 | 0.5722 | 0.6544 | 0.8361 | Deprecated Baseline |
-| **Day 2** | Decision Tree / Random Forest / SVM | 0.7854 | 0.7567 | 0.5739 | 0.8491 | Tree Benchmark |
-| **Day 3** | Tuned Random Forest (5-Fold Stratified CV, depth=6) | 0.7925 | 0.7701 | 0.5842 | 0.8498 | Generalised Model |
-| **Day 4** | **Domain Features + Ensembles (XGBoost + scale_pos_weight)** | **0.8010** | **0.8048** | **0.5960** | **0.8612** | **Phase 1 Production Champion** |
+| **Day 1** | Baseline Logistic Regression | 0.8053 | 0.5722 | 0.6544 | 0.8361 | Deprecated |
+| **Day 2** | Decision Tree / Random Forest / SVM | 0.7854 | 0.7567 | 0.5739 | 0.8491 | Evaluated |
+| **Day 3** | Tuned Random Forest (5-Fold CV) | 0.7925 | 0.7701 | 0.5842 | 0.8498 | Audited |
+| **Day 4** | **Domain Features + Ensembles (XGBoost)** | **0.8010** | **0.8048** | **0.5960** | **0.8612** | **Production Champion** |
+| **Day 5** | Deep ANN (Keras 3-Layer + BatchNorm + Dropout) | 0.7583 | 0.7834 | 0.5288 | 0.8415 | DL Benchmark |
 
-### Key Milestones Delivered Through Day 4
-1. **Domain Feature Engineering**: Synthesized \Monthly_to_Total_Ratio\, \TenureGroup\, \IsMonthToMonth\, and \StreamBundle\ indicators inside an automated scikit-learn transformer.
-2. **Dimension Reduction**: Evaluated PCA preserving 95% variance to eliminate collinearity in service attributes.
-3. **Boosting Ensembles**: Shifted from bagging to gradient-boosted decision trees using XGBoost with inverse class weighting, boosting churn recall to **> 80%** with a peak ROC-AUC of **0.8612**.
-4. **Service Freezing**: Preprocessing steps and model serialized as a single immutable pipeline in \models/churn_production_v4.joblib\.
+### Honest Diagnostic: When to Use Which?
+1. **Classical Ensembles (XGBoost / Random Forest) — The Clear Winner on Tabular Data**:
+   - **Why XGBoost Remains Production Champion**: On medium-sized tabular retail records (~7,000 rows), gradient boosted decision trees naturally handle mixed feature distributions, discrete boundaries, and non-linear interactions without requiring heavy parameter search or architectural tuning. XGBoost delivered higher ROC-AUC (**0.8612** vs. **0.8415**) and significantly better precision with zero risk of gradient vanishing.
+   - **Operational Footprint**: Near-instant inference latency, minimal memory usage, and no native GPU runtime dependency.
+
+2. **Deep Learning (Keras Feed-Forward ANN) — When Depth Actually Adds Value**:
+   - **Observations on Tabular Telco**: The deep ANN learned meaningful decision surfaces and high churn recall (**0.7834**), but required aggressive regularization (Dropout, BatchNormalization, EarlyStopping) to prevent overfitting tabular noise.
+   - **When to Deploy Neural Nets in RetailMind AI**:
+     - High-cardinality entity embeddings (e.g., millions of customer IDs or SKU categories).
+     - Multi-modal retail data (e.g., fusing tabular transactional history with product images or customer support audio/text transcripts).
+     - Massive streaming datasets ($> 10^7$ rows) where continuous online gradient descent out-scales tree memory caches.

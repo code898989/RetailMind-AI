@@ -47,3 +47,29 @@ otebooks/day03_tuning_bias_variance.ipynb\.
   - Reached **80.5% Churn Recall** and **0.8612 ROC-AUC**. Four out of five churning retail accounts are caught ahead of contract expiration, minimizing lost MRR.
 - **Open Blockers / Points for Doubt-Clearing**:
   - Phase 1 complete. Ready for Phase 2: Deep Learning baseline (Keras ANN benchmark).
+
+## Day 5: Deep Learning Propensity Model (Keras ANN)
+- **Changes Added**:
+  - Implemented 3-layer deep feed-forward neural network (\src/pipelines/train_day5_ann.py\) with ReLU activations, Batch Normalization, and Dropout.
+  - Applied \EarlyStopping\ on validation loss to prevent tabular overfitting and configured class weights to counter the churn target imbalance.
+  - Benchmarked ANN directly against the Phase 1 Classical Champion (XGBoost).
+  - Saved model to \models/churn_ann_v5.keras\ and tabular preprocessor to \models/ann_preprocessor_v5.joblib\.
+  - Updated \src/service.py\ to support dual-engine inference (classical pipeline or Keras deep learning model).
+  - Documented engineering findings and 'when to use which' trade-offs in \README.md\.
+- **Business Value Added**:
+  - Proved empirically that while the ANN captures high recall (~78.3%), XGBoost remains the optimal production engine for tabular churn. This prevents over-engineering and keeps inference costs low while setting up the architecture for future multi-modal features.
+- **Open Blockers / Points for Doubt-Clearing**:
+  - Neural networks require careful feature scaling and struggle with mixed tabular types compared to tree-based splitters.
+
+## Day 5: Deep Learning Propensity Model (Keras ANN)
+- **Changes Added**:
+  - Implemented 3-layer deep feed-forward neural network (\src/pipelines/train_day5_ann.py\) with ReLU activations, Batch Normalization, and Dropout.
+  - Applied \EarlyStopping\ on validation loss to prevent tabular overfitting and configured class weights to counter the churn target imbalance.
+  - Benchmarked ANN directly against the Phase 1 Classical Champion (XGBoost).
+  - Saved model to \models/churn_ann_v5.keras\ and tabular preprocessor to \models/ann_preprocessor_v5.joblib\.
+  - Updated \src/service.py\ to support dual-engine inference (classical pipeline or Keras deep learning model).
+  - Documented engineering findings and 'when to use which' trade-offs in \README.md\.
+- **Business Value Added**:
+  - Proved empirically that while the ANN captures high recall (~78.3%), XGBoost remains the optimal production engine for tabular churn. This prevents over-engineering and keeps inference costs low while setting up the architecture for future multi-modal features.
+- **Open Blockers / Points for Doubt-Clearing**:
+  - Neural networks require careful feature scaling and struggle with mixed tabular types compared to tree-based splitters.

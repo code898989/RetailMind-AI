@@ -10,7 +10,7 @@ from sklearn.pipeline import Pipeline
 from sklearn.decomposition import PCA
 from sklearn.ensemble import RandomForestClassifier
 from xgboost import XGBClassifier
-from sklearn.metrics import classification_report, roc_auc_score, recall_score, precision_score, accuracy_score
+from sklearn.metrics import classification_report, roc_auc_score, recall_score, precision_score, f1_score, accuracy_score
 
 DATA_PATH = os.path.join("data", "raw", "WA_Fn-UseC_-Telco-Customer-Churn.csv")
 MODEL_DIR = "models"
@@ -22,26 +22,17 @@ class DomainFeatureEngineer(BaseEstimator, TransformerMixin):
 
     def transform(self, X):
         X = X.copy()
-        
-        # 1. Charge ratios
         X["Monthly_to_Total_Ratio"] = X["MonthlyCharges"] / (X["TotalCharges"] + 1.0)
-        
-        # 2. Tenure buckets
         X["TenureGroup"] = pd.cut(
             X["tenure"],
             bins=[-1, 12, 24, 48, 60, 100],
             labels=["0-1yr", "1-2yr", "2-4yr", "4-5yr", "5yr+"]
         ).astype(str)
-
-        # 3. High-risk contract and auto-payment flags
         X["IsMonthToMonth"] = (X["Contract"] == "Month-to-month").astype(int)
         X["IsAutoPayment"] = X["PaymentMethod"].str.contains("automatic", case=False).astype(int)
-        
-        # 4. Stream bundle indicator
         has_tv = (X["StreamingTV"] == "Yes").astype(int)
         has_mov = (X["StreamingMovies"] == "Yes").astype(int)
         X["StreamBundle"] = has_tv + has_mov
-
         return X
 
 def load_clean_data(path: str):
@@ -62,7 +53,6 @@ def run_day4_pipeline():
         X, y, test_size=0.20, random_state=42, stratify=y
     )
 
-    # Categorical and numerical columns after feature engineering
     fe = DomainFeatureEngineer()
     X_fe_sample = fe.transform(X_train)
     num_cols = X_fe_sample.select_dtypes(include=["int64", "float64"]).columns.tolist()
@@ -75,7 +65,6 @@ def run_day4_pipeline():
         ]
     )
 
-    # Calculate scale_pos_weight for XGBoost to balance churn (Negative / Positive)
     neg_count = (y_train == 0).sum()
     pos_count = (y_train == 1).sum()
     scale_pos_weight = neg_count / pos_count
@@ -122,7 +111,6 @@ def run_day4_pipeline():
 
         print(f"{name:<34} | {acc:.4f}   | {rec:.4f}   | {prec:.4f}    | {f1:.4f} | {auc:.4f}")
 
-    # Lock XGBoost as Day 4 Final Production Model
     champion_name = "XGBoost (Day 4 Boosting Champion)"
     production_pipe = trained_pipelines[champion_name]
 

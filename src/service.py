@@ -2,12 +2,34 @@ import os
 import joblib
 import pandas as pd
 import numpy as np
+from sklearn.base import BaseEstimator, TransformerMixin
 
-DAY6_CNN_PATH = os.path.join("models", "catalog_cnn_v6.keras")
-DAY6_LABELS_PATH = os.path.join("models", "catalog_labels_v6.joblib")
+# Transformer definition required for unpickling Day 4 pipeline
+class DomainFeatureEngineer(BaseEstimator, TransformerMixin):
+    def fit(self, X, y=None):
+        return self
+
+    def transform(self, X):
+        X = X.copy()
+        X["Monthly_to_Total_Ratio"] = X["MonthlyCharges"] / (X["TotalCharges"] + 1.0)
+        X["TenureGroup"] = pd.cut(
+            X["tenure"],
+            bins=[-1, 12, 24, 48, 60, 100],
+            labels=["0-1yr", "1-2yr", "2-4yr", "4-5yr", "5yr+"]
+        ).astype(str)
+        X["IsMonthToMonth"] = (X["Contract"] == "Month-to-month").astype(int)
+        X["IsAutoPayment"] = X["PaymentMethod"].str.contains("automatic", case=False).astype(int)
+        has_tv = (X["StreamingTV"] == "Yes").astype(int)
+        has_mov = (X["StreamingMovies"] == "Yes").astype(int)
+        X["StreamBundle"] = has_tv + has_mov
+        return X
+
 DAY5_ANN_PATH = os.path.join("models", "churn_ann_v5.keras")
 DAY5_PREP_PATH = os.path.join("models", "ann_preprocessor_v5.joblib")
 DAY4_PATH = os.path.join("models", "churn_production_v4.joblib")
+DAY3_PATH = os.path.join("models", "churn_v3.joblib")
+DAY2_PATH = os.path.join("models", "churn_champion_v2.joblib")
+DAY1_PATH = os.path.join("models", "churn_pipeline_v1.joblib")
 
 class ChurnPredictorService:
     def __init__(self, use_ann: bool = False):
@@ -18,13 +40,27 @@ class ChurnPredictorService:
             self.preprocessor = joblib.load(DAY5_PREP_PATH)
             self.version = "Day 5 Deep Learning ANN (Keras)"
         else:
-            self.pipeline = joblib.load(DAY4_PATH)
-            self.version = "Phase 1 Classical Champion (XGBoost/Ensemble)"
+            model_path = None
+            for candidate in [DAY4_PATH, DAY3_PATH, DAY2_PATH, DAY1_PATH]:
+                if os.path.exists(candidate):
+                    model_path = candidate
+                    break
+            if not model_path:
+                raise FileNotFoundError("No trained model artefact found in models/.")
+            self.pipeline = joblib.load(model_path)
+            if "v4" in model_path:
+                self.version = "Day 4 Production Model (XGBoost/Ensemble)"
+            elif "v3" in model_path:
+                self.version = "Day 3 Tuned Champion (Random Forest)"
+            elif "v2" in model_path:
+                self.version = "Day 2 Champion (Random Forest)"
+            else:
+                self.version = "Day 1 Baseline (Logistic Regression)"
 
     def predict(self, records: pd.DataFrame) -> pd.DataFrame:
         if self.use_ann:
             features = self.preprocessor.transform(records)
-            probas = self.model.predict(features).ravel()
+            probas = self.model.predict(features, verbose=0).ravel()
             preds = (probas >= 0.5).astype(int)
         else:
             preds = self.pipeline.predict(records)
@@ -38,48 +74,36 @@ class ChurnPredictorService:
         )
         return output
 
-class CatalogVisionService:
-    """Day 6: Computer Vision Auto-tagging Service for Retail Products."""
-    def __init__(self):
-        if not os.path.exists(DAY6_CNN_PATH) or not os.path.exists(DAY6_LABELS_PATH):
-            raise FileNotFoundError("Catalog CNN model not found. Run train_day6_cnn.py first.")
-        import tensorflow as tf
-        self.model = tf.keras.models.load_model(DAY6_CNN_PATH)
-        self.labels = joblib.load(DAY6_LABELS_PATH)
-        self.version = "Day 6 Catalog Classifier (CNN)"
-
-    def predict_image(self, image_array: np.ndarray) -> dict:
-        \"\"\"Accepts (H, W, 3) normalized [0, 1] float32 image array.\"\"\"
-        if len(image_array.shape) == 3:
-            image_array = np.expand_dims(image_array, axis=0)
-        
-        probs = self.model.predict(image_array, verbose=0)[0]
-        top_idx = int(np.argmax(probs))
-        
-        return {
-            "predicted_category": self.labels[top_idx],
-            "confidence": float(round(probs[top_idx], 4)),
-            "all_probabilities": {self.labels[i]: float(round(probs[i], 4)) for i in range(len(self.labels))}
-        }
-
 if __name__ == "__main__":
-    # Test Churn Service
     sample_customer = pd.DataFrame([{
-        "gender": "Female", "SeniorCitizen": 0, "Partner": "Yes", "Dependents": "No",
-        "tenure": 1, "PhoneService": "No", "MultipleLines": "No phone service",
-        "InternetService": "DSL", "OnlineSecurity": "No", "OnlineBackup": "Yes",
-        "DeviceProtection": "No", "TechSupport": "No", "StreamingTV": "No",
-        "StreamingMovies": "No", "Contract": "Month-to-month", "PaperlessBilling": "Yes",
-        "PaymentMethod": "Electronic check", "MonthlyCharges": 29.85, "TotalCharges": 29.85
+        "gender": "Female",
+        "SeniorCitizen": 0,
+        "Partner": "Yes",
+        "Dependents": "No",
+        "tenure": 1,
+        "PhoneService": "No",
+        "MultipleLines": "No phone service",
+        "InternetService": "DSL",
+        "OnlineSecurity": "No",
+        "OnlineBackup": "Yes",
+        "DeviceProtection": "No",
+        "TechSupport": "No",
+        "StreamingTV": "No",
+        "StreamingMovies": "No",
+        "Contract": "Month-to-month",
+        "PaperlessBilling": "Yes",
+        "PaymentMethod": "Electronic check",
+        "MonthlyCharges": 29.85,
+        "TotalCharges": 29.85
     }])
-    churn_service = ChurnPredictorService()
-    print(f"[ACTIVE SERVICE] {churn_service.version}")
-    print(churn_service.predict(sample_customer)[["MonthlyCharges", "tenure", "churn_risk_probability", "risk_flag"]])
 
-    # Test Vision Service if model exists
-    if os.path.exists(DAY6_CNN_PATH):
-        vision_service = CatalogVisionService()
-        print(f"\n[ACTIVE SERVICE] {vision_service.version}")
-        dummy_img = np.random.uniform(0.0, 1.0, size=(64, 64, 3)).astype("float32")
-        result = vision_service.predict_image(dummy_img)
-        print("Auto-Tagged Image Output:", result)
+    service = ChurnPredictorService(use_ann=False)
+    print(f"[ACTIVE SERVICE] {service.version}")
+    result = service.predict(sample_customer)
+    print(result[["MonthlyCharges", "tenure", "churn_risk_probability", "risk_flag"]])
+
+    if os.path.exists(DAY5_ANN_PATH):
+        service_ann = ChurnPredictorService(use_ann=True)
+        print(f"\n[ACTIVE SERVICE] {service_ann.version}")
+        result_ann = service_ann.predict(sample_customer)
+        print(result_ann[["MonthlyCharges", "tenure", "churn_risk_probability", "risk_flag"]])

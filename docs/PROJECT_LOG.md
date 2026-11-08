@@ -73,3 +73,16 @@ otebooks/day03_tuning_bias_variance.ipynb\.
   - Proved empirically that while the ANN captures high recall (~78.3%), XGBoost remains the optimal production engine for tabular churn. This prevents over-engineering and keeps inference costs low while setting up the architecture for future multi-modal features.
 - **Open Blockers / Points for Doubt-Clearing**:
   - Neural networks require careful feature scaling and struggle with mixed tabular types compared to tree-based splitters.
+
+## Day 6: CNN Product Image Classification
+- **Changes Added**:
+  - Implemented standalone Vision pipeline (\src/pipelines/train_day6_cnn.py\) with Fashion-MNIST architecture prototyping.
+  - Built 3-block augmented CNN for retail catalog auto-tagging.
+  - Serialized model to \models/catalog_cnn_v6.keras\ and label mappings to \models/catalog_labels_v6.joblib\.
+  - Added \CatalogVisionService\ to \src/service.py\ to support real-time product auto-tagging alongside churn prediction.
+  - Added \
+otebooks/day06_cnn_image_classification.ipynb\ and detailed documentation in \docs/phase2_deep_learning/day06_cnn_image_classification.md\.
+- **Business Value Added**:
+  - Cuts catalog onboarding latency by automating product category tagging directly from warehouse photos.
+- **Open Blockers / Points for Doubt-Clearing**:
+  - Training from scratch on small image crops limits fine-grained accuracy; ready for Day 7 Transfer Learning (pre-trained feature extractors) and object localization.

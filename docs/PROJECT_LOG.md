@@ -86,3 +86,13 @@ otebooks/day06_cnn_image_classification.ipynb\ and detailed documentation in \do
   - Cuts catalog onboarding latency by automating product category tagging directly from warehouse photos.
 - **Open Blockers / Points for Doubt-Clearing**:
   - Training from scratch on small image crops limits fine-grained accuracy; ready for Day 7 Transfer Learning (pre-trained feature extractors) and object localization.
+
+## Day 7: Transfer Learning & YOLO Object Detection
+- **Changes Added**:
+  - Built ResNet50 transfer learning pipeline in \src/vision/transfer_classifier.py\.
+  - Added YOLO product detector in \src/vision/detector.py\.
+  - Built catalog QA service in \src/vision/vision_service.py\.
+  - Created notebook \
+otebooks/day07_transfer_learning_yolo.ipynb\ and doc \docs/phase2_deep_learning/day07_transfer_learning_yolo.md\.
+- **Business Value**:
+  - Automatically flags non-compliant product photos and locates items for automated crop/thumbnail generation.

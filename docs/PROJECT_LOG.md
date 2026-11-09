@@ -96,3 +96,13 @@ otebooks/day06_cnn_image_classification.ipynb\ and detailed documentation in \do
 otebooks/day07_transfer_learning_yolo.ipynb\ and doc \docs/phase2_deep_learning/day07_transfer_learning_yolo.md\.
 - **Business Value**:
   - Automatically flags non-compliant product photos and locates items for automated crop/thumbnail generation.
+
+## Day 7: Deep Architecture Optimization & Batch Inference
+- **Changes Added**:
+  - Validated full-dataset batch evaluation against holdout split in inference service.
+  - Profiled forward-pass CPU latency and memory footprint during batch scoring.
+  - Updated README.md audit ledger with Day 7 evaluation benchmarks.
+- **Business Value Added**:
+  - Established rigorous full-cohort performance baselines to guarantee model stability before deploying automated retention triggers.
+- **Open Blockers / Points for Doubt-Clearing**:
+  - Assess whether embedding layers or transformer-based tabular architectures provide measurable gains over gradient boosting.

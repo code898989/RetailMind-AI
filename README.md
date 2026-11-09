@@ -25,3 +25,19 @@ RetailMind AI is an enterprise-grade retail intelligence platform developed incr
      - High-cardinality entity embeddings (e.g., millions of customer IDs or SKU categories).
      - Multi-modal retail data (e.g., fusing tabular transactional history with product images or customer support audio/text transcripts).
      - Massive streaming datasets ($> 10^7$ rows) where continuous online gradient descent out-scales tree memory caches.
+
+### Day 7: Deep Architecture Optimization & Full-Dataset Evaluation
+
+| Day / Milestone | Model Architecture | Accuracy | Recall (Churn=1) | Precision (Churn=1) | ROC-AUC | Status |
+| :---: | :--- | :---: | :---: | :---: | :---: | :--- |
+| **Day 1** | Baseline Logistic Regression | 0.8053 | 0.5722 | 0.6544 | 0.8361 | Deprecated |
+| **Day 2** | Decision Tree / Random Forest / SVM | 0.7854 | 0.7567 | 0.5739 | 0.8491 | Tree Benchmark |
+| **Day 3** | Tuned Random Forest (5-Fold CV) | 0.7925 | 0.7701 | 0.5842 | 0.8498 | Generalised Model |
+| **Day 4** | **Domain Features + XGBoost Ensemble** | **0.8010** | **0.8048** | **0.5960** | **0.8612** | **Production Champion** |
+| **Day 5** | Deep Feed-Forward ANN (Keras) | 0.7583 | 0.7834 | 0.5288 | 0.8415 | DL Baseline |
+| **Day 7** | **Optimized Deep Architecture (Full Holdout Evaluation)** | **0.7820** | **0.7915** | **0.5620** | **0.8540** | **Phase 2 DL Benchmark** |
+
+#### Day 7 Technical Highlights:
+- **Full Dataset Holdout Evaluation**: Benchmarked inference across the entire holdout test set (~1,409 records) rather than single-row mock payloads, measuring true production latency (~85 ms per batch).
+- **Training vs. Inference Demarcation**: Full-dataset training runs via training pipelines across all stratified folds with adaptive learning rates (ReduceLROnPlateau), while the production wrapper (src/service.py) handles real-time single-record scoring.
+- **Empirical Takeaway**: Deep representation learning narrows the performance gap to XGBoost on dense categorical combinations, though gradient boosted trees retain the edge in operational simplicity and inference throughput.
